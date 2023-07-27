@@ -91,16 +91,19 @@ DSI_THREAD_RETURN _io_task(void *pvParameter_)
 #define ANT_FEC_PAGE51_SLOPE_LSB       (1.f/100.f)
 #define ANT_FEC_PAGE51_ROLL_RES_LSB    (5.f/100000.f)
 
+#define USE_FEEL
+#define USE_SLOPE
+
 DSI_THREAD_RETURN _tx_task(void *pvParameter_)
 {
     UCHAR aucTransmitBuffer[ANT_STANDARD_DATA_PAYLOAD_SIZE];
 
-#if !defined( USE_SLOPE )
     while (!bMyDone) {
+#if !defined( USE_SLOPE )
 
         DSIThread_Sleep(1000);
 
-        float power = 199; // 5%
+        float power = 50; // 50 watts
         uint16_t usPower = (uint16_t)(power / ANT_FEC_PAGE49_TARGET_POWER_LSB);
 
         aucTransmitBuffer[MESSAGE_BUFFER_DATA1_INDEX] = 49u; // page
@@ -111,14 +114,11 @@ DSI_THREAD_RETURN _tx_task(void *pvParameter_)
 
         printf("Transmitting on channel %d ... \n", fec_device_channel);
 
-    }
 #else
-    while (!bMyDone) {
-
         DSIThread_Sleep(1000);
 
-        float slope = 5.f; // 5%
-        uint16_t usSlope = (uint16_t)(slope / ANT_FEC_PAGE51_SLOPE_LSB);
+        float slope = 1.f; // 1%
+        uint16_t usSlope = (uint16_t)((slope / ANT_FEC_PAGE51_SLOPE_LSB) + 0x4e20);
         float roll_res = 0.005f; // 0.005
         uint8_t usroll_res = (uint16_t)(roll_res / ANT_FEC_PAGE51_ROLL_RES_LSB);
 
@@ -130,9 +130,26 @@ DSI_THREAD_RETURN _tx_task(void *pvParameter_)
         ue5_lib__sendBytes(fec_device_channel, aucTransmitBuffer);
 
         printf("Transmitting on channel %d ... \n", fec_device_channel);
-
-    }
 #endif
+#if defined( USE_FEEL )
+
+        DSIThread_Sleep(1000);
+
+        memset(aucTransmitBuffer, 0, ANT_STANDARD_DATA_PAYLOAD_SIZE);
+
+        aucTransmitBuffer[MESSAGE_BUFFER_DATA1_INDEX] = 0xFC; // page
+
+        aucTransmitBuffer[MESSAGE_BUFFER_DATA3_INDEX] = 0x00; // 0 = off 1= isokinetic
+        aucTransmitBuffer[MESSAGE_BUFFER_DATA4_INDEX] = 0x00; // 84…168 (15…30km/h) / LSB = 0.05m/s
+
+        aucTransmitBuffer[MESSAGE_BUFFER_DATA6_INDEX] = 0x03; // cobblestone
+        aucTransmitBuffer[MESSAGE_BUFFER_DATA7_INDEX] = 0x32; // 50% intensity
+
+        ue5_lib__sendBytes(fec_device_channel, aucTransmitBuffer);
+
+        printf("Transmitting on channel %d ... \n", fec_device_channel);
+#endif
+    }
 
     return NULL;
 }
@@ -142,6 +159,12 @@ DSI_THREAD_RETURN _tx_task(void *pvParameter_)
 #define FEC_MSG_PERIOD             8192u               ///< Message period, decimal 8182 (4 Hz).
 
 int main(int argc, char *argv[]) {
+
+    /* Deactivate buffering so that messages appear in journald.
+     * This could be done in the service file but the tools are
+     * not present on the q8.
+     */
+    setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
     ue5_lib__startupAntPlusLib();
 
