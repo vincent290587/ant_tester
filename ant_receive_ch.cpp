@@ -3,6 +3,7 @@
 //
 
 #include "ant_receive_ch.h"
+#include "dsi_debug.hpp"
 
 ANTrxService::ANTrxService() {
 	ucChannelType = CHANNEL_TYPE_SLAVE; // always a slave
@@ -232,6 +233,15 @@ void ANTrxService::MessageThread()
                 bTXwaiting = false;
                 //printf("SendBroadcastData %u \n", aucTransmitBuffer[0]);
             }
+//            if (bTXwaiting) {
+//                BOOL res = pclMessageObject->SendAcknowledgedData(txChannel, aucTransmitBuffer); // SendAcknowledgedData
+//                if (res) {
+//                    bTXwaiting = false;
+//                } else {
+//
+//                }
+//                printf("SendBroadcastData %u \n", aucTransmitBuffer[0]);
+//            }
 		}
 	}
 
