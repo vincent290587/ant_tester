@@ -155,8 +155,9 @@ DSI_THREAD_RETURN _tx_task(void *pvParameter_)
 }
 
 #define FEC_DEVICE_TYPE            0x11u               ///< Device type reserved for ANT+ Bicycle Power.
-#define FEC_ANTPLUS_RF_FREQ        0x39u               ///< Frequency, decimal 57 (2457 MHz).
 #define FEC_MSG_PERIOD             8192u               ///< Message period, decimal 8182 (4 Hz).
+
+//#define USE_DOUBLE_RECORDING
 
 int main(int argc, char *argv[]) {
 
@@ -174,20 +175,24 @@ int main(int argc, char *argv[]) {
                          _pw1_callback);
     assert(fec_device_channel >= 0);
 
+#ifdef USE_DOUBLE_RECORDING
     (void)ue5_lib__addDeviceID(0xEFAC,
                          PW_DEVICE_TYPE,
                          PW_PERIOD_COUNTS,
                          _pw2_callback);
-
-    DSI_THREAD_ID uiDSIThread;
-    // Create message thread.
-    uiDSIThread = DSIThread_CreateThread(_io_task, 0);
-    assert(uiDSIThread);
-
-//    uiDSIThread = DSIThread_CreateThread(_tx_task, 0);
-//    assert(uiDSIThread);
+#endif
 
     ue5_lib__startANT();
+
+    DSI_THREAD_ID uiDSIThread;
+
+#ifdef USE_DOUBLE_RECORDING
+    uiDSIThread = DSIThread_CreateThread(_io_task, 0);
+    assert(uiDSIThread);
+#endif
+
+    uiDSIThread = DSIThread_CreateThread(_tx_task, 0);
+    assert(uiDSIThread);
 
     Loop();
 
