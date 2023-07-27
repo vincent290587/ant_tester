@@ -466,6 +466,18 @@ void ANTrxService::ProcessMessage(ANT_MESSAGE stMessage, USHORT usSize_)
 							break;
 						}
 
+                        case EVENT_TRANSFER_TX_COMPLETED:
+                        {
+                            printf("TX completed\n");
+                            break;
+                        }
+
+                        case EVENT_TRANSFER_TX_FAILED:
+                        {
+                            printf("TX failed\n");
+                            break;
+                        }
+
 						default:
 						{
 							printf("Unhandled channel event: 0x%X\n", stMessage.aucData[2]);
