@@ -21,6 +21,8 @@ else()
     message("Using MSVC compiler")
 endif()
 
+add_definitions(-DDEBUG_FILE)
+
 include_directories(
         ./
         ${CMAKE_CURRENT_SOURCE_DIR}/AntPlusPlugin/Source/ThirdParty/AntPlusPluginLibrary
@@ -57,3 +59,5 @@ install(TARGETS ${PROJECT_NAME}_DLL ANT_LIB
         #        CONFIGURATIONS Release
         DESTINATION ${CMAKE_INSTALL_BINDIR}/Source/ThirdParty/AntPlusPluginLibrary/x64
         )
+
+file( GENERATE OUTPUT "${CMAKE_BINARY_DIR}/.gitignore" CONTENT "*" )
